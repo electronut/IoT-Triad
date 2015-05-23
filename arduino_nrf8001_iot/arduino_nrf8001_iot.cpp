@@ -96,7 +96,7 @@ void aci_loop()
 
                 case ACI_DEVICE_STANDBY:
                     aci_state.device_state = ACI_DEVICE_STANDBY;
-                    // sleep_to_wakeup_timeout = 30;
+                    sleep_to_wakeup_timeout = 30;
                     Serial.println(F("Evt Device Started: Standby"));
                     if (aci_evt->params.device_started.hw_error) {
                         //Magic number used to make sure the HW error 
@@ -225,7 +225,7 @@ void aci_loop()
                 /*
                   We can now send the next temperature measurement.
                 */
-                //ack_temp_measure_pending = false;
+                // ack_temp_measure_pending = false;
             }
             break;
 
