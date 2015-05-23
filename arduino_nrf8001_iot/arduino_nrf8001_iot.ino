@@ -199,6 +199,10 @@ void aci_loop()
                     //Timer1start();
                     notifyTemp = true;
                 }
+                else {
+                    notifyTemp = false;
+                }
+                
             }
             break;    
         
