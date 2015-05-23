@@ -28,8 +28,10 @@
 #include <lib_aci.h>
 
 #include <aci_setup.h>
-#include "health_thermometer.h"
-#include "timer1.h"
+
+unsigned long lastUpdate = millis();
+bool notifyTemp = false;
+
 
 #ifdef SERVICES_PIPE_TYPE_MAPPING_CONTENT
 static services_pipe_type_mapping_t
@@ -174,7 +176,7 @@ void aci_loop()
                     Serial.println(F("nRF8001 going to sleep"));
                     lib_aci_sleep();
                     aci_state.device_state = ACI_DEVICE_SLEEP;
-                    Timer1start();
+                    // Timer1start();
                 }
             }
             else
@@ -193,8 +195,9 @@ void aci_loop()
                 // check if the peer has subscribed to the
                 // Temperature Characteristic
                 if (lib_aci_is_pipe_available(&aci_state, 
-                                              PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK)) {
-                    Timer1start();
+                     PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK)) {
+                    //Timer1start();
+                    notifyTemp = true;
                 }
             }
             break;    
@@ -274,6 +277,8 @@ void aci_loop()
 
 void setup(void)
 {
+    pinMode(13, OUTPUT);
+
     Serial.begin(115200);
     // Wait until the serial port is available (useful only for the Leonardo)
     // As the Leonardo board is not reseted every time you open the 
@@ -343,6 +348,27 @@ void setup(void)
 void loop()
 {
     aci_loop();
+
+    // every 5 seconds
+    if(millis() - lastUpdate > 5000) {
+
+        // get temp
+        uint8_t temp = 100;
+        
+        if (notifyTemp) {
+            
+            lib_aci_send_data(PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK, (uint8_t *)&temp, 1);
+        }
+        
+        // blink
+        digitalWrite(13, HIGH);   
+        delay(200);
+        digitalWrite(13, LOW);    
+        
+        lastUpdate = millis();
+        
+    }
+    
 }
 
 
