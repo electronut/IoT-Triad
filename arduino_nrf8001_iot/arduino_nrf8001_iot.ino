@@ -32,6 +32,7 @@
 unsigned long lastUpdate = millis();
 bool notifyTemp = false;
 
+bool broadcastSet = false;
 
 #ifdef SERVICES_PIPE_TYPE_MAPPING_CONTENT
 static services_pipe_type_mapping_t
@@ -40,8 +41,6 @@ services_pipe_type_mapping[NUMBER_OF_PIPES] = SERVICES_PIPE_TYPE_MAPPING_CONTENT
 #define NUMBER_OF_PIPES 0
 static services_pipe_type_mapping_t * services_pipe_type_mapping = NULL;
 #endif
-
-#define TEMPERATURE_NUM_SAMPLES  10
 
 static const hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CONTENT;
 // aci_struct that will contain
@@ -98,6 +97,16 @@ void aci_loop()
 
                 case ACI_DEVICE_STANDBY:
                     aci_state.device_state = ACI_DEVICE_STANDBY;
+
+                        if (!broadcastSet) {
+                            lib_aci_open_adv_pipe(PIPE_BATTERY_BATTERY_LEVEL_BROADCAST);
+                            //lib_aci_broadcast(0, 0x0100);
+                            Serial.println(F("Broadcasting started"));
+                            broadcastSet = true;
+                            notifyTemp = true;
+                            
+                        }
+
                     // sleep_to_wakeup_timeout = 30;
                     Serial.println(F("Evt Device Started: Standby"));
                     if (aci_evt->params.device_started.hw_error) {
@@ -113,8 +122,8 @@ void aci_loop()
                     }
                     break;
                 }
-                
             }
+            
             break; //ACI Device Started Event
       
         case ACI_EVT_CMD_RSP:
@@ -194,6 +203,7 @@ void aci_loop()
                 Serial.println(F("Evt Pipe Status"));
                 // check if the peer has subscribed to the
                 // Temperature Characteristic
+#if 0
                 if (lib_aci_is_pipe_available(&aci_state, 
                      PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK)) {
                     //Timer1start();
@@ -202,7 +212,7 @@ void aci_loop()
                 else {
                     notifyTemp = false;
                 }
-                
+#endif           
             }
             break;    
         
@@ -281,7 +291,6 @@ void aci_loop()
 
 void setup(void)
 {
-    pinMode(13, OUTPUT);
 
     Serial.begin(115200);
     // Wait until the serial port is available (useful only for the Leonardo)
@@ -291,7 +300,7 @@ void setup(void)
     {}
     // 5 seconds delay for enabling to see the start up 
     // commands on the serial board
-    delay(5000);  
+    delay(5000);
 
     Serial.println(F("Arduino setup"));
 
@@ -346,29 +355,38 @@ void setup(void)
 
     // The second parameter is for turning debug printing on 
     // for the ACI Commands and Events so they be printed on the Serial
-    lib_aci_init(&aci_state, false);
+    lib_aci_init(&aci_state, true);
 }
 
+
+uint8_t index = 0;
+uint8_t batt[] = {25, 50, 75};
+    
 void loop()
 {
     aci_loop();
-
+    
     // every 5 seconds
     if(millis() - lastUpdate > 5000) {
-
         // get temp
         uint8_t temp = 100;
-        
+        float T = 23.14;
         if (notifyTemp) {
             
-            lib_aci_send_data(PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK, (uint8_t *)&temp, 1);
+            Serial.println(F("Sending temp"));
+
+            // lib_aci_send_data(PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK, (uint8_t*)&T, 4);
+
+            
+            uint8_t val = batt[index++ % 3];
+            
+                               
+            lib_aci_set_local_data(&aci_state, PIPE_BATTERY_BATTERY_LEVEL_BROADCAST, (uint8_t*)&val, 1);
+
         }
-        
-        // blink
-        digitalWrite(13, HIGH);   
-        delay(200);
-        digitalWrite(13, LOW);    
-        
+
+        Serial.println(F("blink"));
+
         lastUpdate = millis();
         
     }
