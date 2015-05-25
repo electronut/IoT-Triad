@@ -26,13 +26,15 @@ bool broadcastSet = false;
 
 #ifdef SERVICES_PIPE_TYPE_MAPPING_CONTENT
 static services_pipe_type_mapping_t
-services_pipe_type_mapping[NUMBER_OF_PIPES] = SERVICES_PIPE_TYPE_MAPPING_CONTENT;
+services_pipe_type_mapping[NUMBER_OF_PIPES] = 
+    SERVICES_PIPE_TYPE_MAPPING_CONTENT;
 #else
 #define NUMBER_OF_PIPES 0
 static services_pipe_type_mapping_t * services_pipe_type_mapping = NULL;
 #endif
 
-static const hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CONTENT;
+static const hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = 
+    SETUP_MESSAGES_CONTENT;
 static struct aci_state_t aci_state;
 static hal_aci_evt_t aci_data;
 
@@ -143,8 +145,6 @@ void aci_loop()
                             //lib_aci_broadcast(0, 0x0100);
                             Serial.println(F("Broadcasting started"));
                             broadcastSet = true;
-                            notifyTemp = true;
-                            
                         }
                         
                         // sleep_to_wakeup_timeout = 30;
@@ -324,8 +324,6 @@ void aci_loop()
     }
 }
 
-
-
 uint8_t index = 0;
 uint8_t batt[] = {25, 50, 75};
     
@@ -335,29 +333,27 @@ void loop()
     
     // every 5 seconds
     if(millis() - lastUpdate > 5000) {
-        // get temp
-        uint8_t temp = 100;
-        float T = 23.14;
         if (notifyTemp) {
-            
+            // get temp
+            uint8_t temp = 100;
+            float T = 23.14;
             Serial.println(F("Sending temp"));
-
-            lib_aci_send_data(PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK, (uint8_t*)&T, 4);
-
-            
-            uint8_t val = batt[index++ % 3];
-            
-                               
-            lib_aci_set_local_data(&aci_state, PIPE_BATTERY_BATTERY_LEVEL_BROADCAST, (uint8_t*)&val, 1);
-
+            lib_aci_send_data(
+                PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK, 
+                (uint8_t*)&T, 4);
+        }
+        
+        if (broadcastSet) {
+            Serial.println(F("Setting batt level"));
+            uint8_t val = batt[index++ % 3];                               
+            lib_aci_set_local_data(&aci_state, 
+                                   PIPE_BATTERY_BATTERY_LEVEL_BROADCAST, 
+                                   (uint8_t*)&val, 1);
         }
 
-        Serial.println(F("blink"));
-
+        // update time stamp
         lastUpdate = millis();
-        
     }
-    
 }
 
 
