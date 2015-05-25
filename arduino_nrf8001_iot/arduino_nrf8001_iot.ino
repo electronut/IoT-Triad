@@ -203,7 +203,6 @@ void aci_loop()
                 Serial.println(F("Evt Pipe Status"));
                 // check if the peer has subscribed to the
                 // Temperature Characteristic
-#if 0
                 if (lib_aci_is_pipe_available(&aci_state, 
                      PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK)) {
                     //Timer1start();
@@ -212,7 +211,6 @@ void aci_loop()
                 else {
                     notifyTemp = false;
                 }
-#endif           
             }
             break;    
         
@@ -375,7 +373,7 @@ void loop()
             
             Serial.println(F("Sending temp"));
 
-            // lib_aci_send_data(PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK, (uint8_t*)&T, 4);
+            lib_aci_send_data(PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK, (uint8_t*)&T, 4);
 
             
             uint8_t val = batt[index++ % 3];
