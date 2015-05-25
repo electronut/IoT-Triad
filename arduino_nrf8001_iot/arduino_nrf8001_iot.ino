@@ -24,6 +24,9 @@ unsigned long lastUpdate = millis();
 bool notifyTemp = false;
 bool broadcastSet = false;
 
+// LM35 analog input
+int lm35Pin = 0;
+
 #ifdef SERVICES_PIPE_TYPE_MAPPING_CONTENT
 static services_pipe_type_mapping_t
 services_pipe_type_mapping[NUMBER_OF_PIPES] = 
@@ -334,13 +337,25 @@ void loop()
     // every 5 seconds
     if(millis() - lastUpdate > 5000) {
         if (notifyTemp) {
-            // get temp
-            uint8_t temp = 100;
-            float T = 23.14;
+
+            // read the value from LM35.
+            // read 10 values for averaging.
+            int val = 0;
+            for(int i = 0; i < 10; i++) {
+                val += analogRead(lm35Pin);   
+                delay(500);
+            }
+
+            // convert to temp:
+            // temp value is in 0-1023 range
+            // LM35 outputs 10mV/degree C. ie, 1 Volt => 100 degrees C
+            // So Temp = (avg_val/1023)*5 Volts * 100 degrees/Volt
+            float temp = val*50.0f/1023.0f;
+
             Serial.println(F("Sending temp"));
             lib_aci_send_data(
                 PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK, 
-                (uint8_t*)&T, 4);
+                (uint8_t*)&temp, 4);
         }
         
         if (broadcastSet) {
