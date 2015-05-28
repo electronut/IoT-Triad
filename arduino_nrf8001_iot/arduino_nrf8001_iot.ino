@@ -2,7 +2,7 @@
   arduino_nrf8001_iot.ino
 
   Arduino connected to Adafruit nRF8001 breakout board. Broadcasts 
-  battery level, notifies temperature from connected DS18B20 sensor.
+  battery level, notifies temperature from connected LM35 sensor.
 
   Author : Mahesh Venkitachalam
   Website: electronut.in
